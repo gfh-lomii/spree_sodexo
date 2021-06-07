@@ -19,21 +19,21 @@ module SpreeSodexo::Spree
 
         url = URI(payment_method.preferences[:sodexo_url] + "/orders")
 
-        http = Net::HTTP.new(url.host, url.port, 
-          p_addr = 'us-east-static-04.quotaguard.com', 
-          p_port = 9293, 
-          p_user = '6fkr3qsa78y7rl', 
-          p_pass = '71acknpbfp3emxvl5z6pq71elns', 
+        http = Net::HTTP.new(url.host, url.port,
+          p_addr = 'us-east-static-04.quotaguard.com',
+          p_port = 9293,
+          p_user = '6fkr3qsa78y7rl',
+          p_pass = '71acknpbfp3emxvl5z6pq71elns',
           p_no_proxy = nil
         )
 
         http.use_ssl = true
         http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
-        request = Net::HTTP::Post.new(url)
-        request["Accept"] = 'application/json'
-        request["Content-Type"] = 'application/json'
-        request["apikey"] = payment_method.preferences[:sodexo_apikey]
+        req = Net::HTTP::Post.new(url)
+        req["Accept"] = 'application/json'
+        req["Content-Type"] = 'application/json'
+        req["apikey"] = payment_method.preferences[:sodexo_apikey]
 
         if @order.withdrawal_first_name.present? && @order.withdrawal_last_name.present?
           f_name = @order&.withdrawal_first_name
@@ -54,7 +54,8 @@ module SpreeSodexo::Spree
         else
           host = request.host
         end
-        request.body = {
+        
+        req.body = {
                           'reference_id': payment_number,
                           'user': {
                             'email': @order.email,
@@ -95,17 +96,17 @@ module SpreeSodexo::Spree
                             }
                           ],
                           'urls': {
-                            'return_url': sodexo_successg_url(payment: payment_number, host: 'sodexo.'+ request.host),
-                            'cancel_url': sodexo_cancel_url(payment: payment_number, host: 'sodexo.'+ request.host)
+                            'return_url': sodexo_successg_url(payment: payment_number),
+                            'cancel_url': sodexo_cancel_url(payment: payment_number)
                           },
                           'webhooks': {
-                            'webhook_confirm': sodexo_notify_url(host: 'sodexo.'+ request.host),
-                            'webhook_reject': sodexo_notify_url(host: 'sodexo.'+ request.host)
+                            'webhook_confirm': sodexo_notify_url(host: host),
+                            'webhook_reject': sodexo_notify_url(host: host)
                           }
                         }.to_json
 
 
-        response = http.request(request)
+        response = http.request(req)
 
         raise "#{response.read_body.to_s}" if response.code != '201'
         redirect_to JSON.parse(response.body)['redirect_url']
