@@ -101,7 +101,7 @@ module SpreeSodexo::Spree
                           },
                           'webhooks': {
                             'webhook_confirm': sodexo_notify_url(host: host),
-                            'webhook_reject': sodexo_notify_url(host: host)
+                            'webhook_reject': sodexo_failure_url(host: host)
                           }
                         }.to_json
 
