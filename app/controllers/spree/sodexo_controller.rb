@@ -36,6 +36,12 @@ module Spree
       puts "ecommerceOrderId: #{ecommerceOrderId}"
       puts "multicajaOrderId: #{multicajaOrderId}"
 
+      if ecommerceOrderId == 'PT0Q094U' || ecommerceOrderId == 'POGJJCCR' || ecommerceOrderId =='P487YMZP'
+        payment.failure!
+        head :ok
+        return
+      end
+
       if !validate_api_key(request.headers["HTTP_APIKEY"], ecommerceOrderId, multicajaOrderId, payment_method.preferences[:sodexo_apikey])
        raise "Error en autenticación"
       end
