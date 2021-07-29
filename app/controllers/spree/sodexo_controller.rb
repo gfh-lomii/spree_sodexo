@@ -82,7 +82,7 @@ module Spree
       head :unprocessable_entity
     end
 
-    def completion_route(order, custom_params = nil) spree.order_path(order, custom_params)
+    def completion_route(order, custom_params = nil) spree.order_path(id: order.number)
     end
 
     def validate_api_key(headerApikey, referenceId, orderId, apiKey)
