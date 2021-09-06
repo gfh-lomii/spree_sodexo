@@ -26,5 +26,12 @@ module Spree
     def authorization
       self
     end
+
+    def available_for_order?(_order)
+      return false if _order.products.with_alcohol_restriction.exists?
+      true
+    rescue
+      return true
+    end
   end
 end
