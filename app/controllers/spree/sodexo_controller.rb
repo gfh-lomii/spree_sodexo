@@ -5,8 +5,16 @@ module Spree
 
     def success
       @payment = Spree::Payment.where(number: params[:payment]).last
-      if !@payment.order.completed?
-        redirect_to(checkout_state_path(:payment), subdomain: false) and return
+
+      if payment.completed?
+        if !@payment.order.completed?
+          return
+        end
+      elsif payment.failed?
+        redirect_to(checkout_state_path(:payment), subdomain: false)
+        return
+      else
+        return
       end
 
       @current_order = nil
@@ -30,11 +38,21 @@ module Spree
       ecommerceOrderId = order['reference_id']
       multicajaOrderId = order['order_id']
 
-      payment = Spree::Payment.find_by!(number: ecommerceOrderId)
+      payment = Spree::Payment.find_by(number: ecommerceOrderId)
+      if payment.blank?
+        Time.zone = 'America/Santiago'
+        date = DateTime.now.in_time_zone.strftime("%a, %B %d %T")
+        notification_url = 'https://hooks.slack.com/workflows/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'
+        message = "[SODEXO SUCCESS] Recibimos el pago pero no se encuentra el pago. payment_number: #{ecommerceOrderId}, multicajaref: #{multicajaOrderId}"
+        SlackNotificationsJob.perform_later(notification_url, message)
+
+        head :ok
+        return
+      end
       payment_method = payment.payment_method
 
-      puts "ecommerceOrderId: #{ecommerceOrderId}"
-      puts "multicajaOrderId: #{multicajaOrderId}"
+      # puts "ecommerceOrderId: #{ecommerceOrderId}"
+      # puts "multicajaOrderId: #{multicajaOrderId}"
 
       if ecommerceOrderId == 'PT0Q094U' || ecommerceOrderId == 'POGJJCCR' || ecommerceOrderId =='P487YMZP'
         payment.failure!
@@ -47,10 +65,7 @@ module Spree
       end
 
       if !payment.completed?
-        payment.complete!
-        order = payment.order
-        order.skip_stock_validation = true
-        payment.order.next!
+        ConfirmPaymentJob.perform_later(payment)
       end
       head :ok
     rescue
@@ -63,15 +78,33 @@ module Spree
       ecommerceOrderId = order['reference_id']
       multicajaOrderId = order['order_id']
 
-      puts "ecommerceOrderId: #{ecommerceOrderId}"
-      puts "multicajaOrderId: #{multicajaOrderId}"
+      # puts "ecommerceOrderId: #{ecommerceOrderId}"
+      # puts "multicajaOrderId: #{multicajaOrderId}"
 
-      payment = Spree::Payment.find_by!(number: ecommerceOrderId)
+      payment = Spree::Payment.find_by(number: ecommerceOrderId)
+      if payment.blank?
+        Time.zone = 'America/Santiago'
+        date = DateTime.now.in_time_zone.strftime("%a, %B %d %T")
+        notification_url = 'https://hooks.slack.com/workflows/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'
+        message = "[SODEXO FAIL] No se encuentra el pago. payment_number: #{ecommerceOrderId}, multicajaref: #{multicajaOrderId}"
+        SlackNotificationsJob.perform_later(notification_url, message)
+
+        head :ok
+        return
+      end
       payment_method = payment.payment_method
 
       if !validate_api_key(request.headers["HTTP_APIKEY"], ecommerceOrderId, multicajaOrderId,
           payment_method.preferences[:sodexo_secret_token])
        raise "Error en autenticación"
+      end
+
+      if payment.completed?
+        Time.zone = 'America/Santiago'
+        date = DateTime.now.in_time_zone.strftime("%a, %B %d %T")
+        notification_url = 'https://hooks.slack.com/workflows/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'
+        message = "[SODEXO FAIL] Recibimos un rechazo a un pago que ya estaba confirmado, no recibiremos el dinero pero la orden ya fue confirmada. payment_number: #{ecommerceOrderId}, multicajaref: #{multicajaOrderId}"
+        SlackNotificationsJob.perform_later(notification_url, message)
       end
 
       if !payment.completed?
