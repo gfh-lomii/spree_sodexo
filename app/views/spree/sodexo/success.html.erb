@@ -18,13 +18,9 @@
     </p>
   </div>
 </div>
-<% if params[retry].present? %>
-  <% retry = params[retry].to_i + 1 %>
-<% else %>
-  <% retry = 1 %>
-<% end %>
+
 <script !src="">
   window.setTimeout(function () {
-    location.href = "/sodexo/success/<%= @payment.number %>?retry=<%= retry.to_s %>";
-  }, 5000);
+    location.href = "/sodexo/success/<%= @payment.number %>?retry=<%= params[:retry].present? ? (params[:retry].to_i + 1).to_s : "1" %>";
+  }, 7000);
 </script>
