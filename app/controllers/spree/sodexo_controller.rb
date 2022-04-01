@@ -6,6 +6,11 @@ module Spree
     def success
       @payment = Spree::Payment.where(number: params[:payment]).last
 
+      if @payment.blank?
+        redirect_to(checkout_state_path(:payment), subdomain: false)
+        return
+      end
+
       if @payment.completed?
         if !@payment.order.completed?
           return
