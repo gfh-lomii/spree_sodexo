@@ -6,14 +6,18 @@ module Spree
     def success
       @payment = Spree::Payment.where(number: params[:payment]).last
 
-      if payment.completed?
+      if @payment.completed?
         if !@payment.order.completed?
           return
         end
-      elsif payment.failed?
+      elsif @payment.failed?
         redirect_to(checkout_state_path(:payment), subdomain: false)
         return
       else
+        if params[:retry].present? && params[:retry].to_i > 2
+          redirect_to(checkout_state_path(:payment), subdomain: false)
+          return
+        end
         return
       end
 
