@@ -105,7 +105,7 @@ module SpreeSodexo::Spree
                           }
                         }.to_json
 
-
+        Rails.logger.info "SODEXO#REQ #{req.body}"
         response = http.request(req)
 
         raise "#{response.read_body.to_s}" if response.code != '201'
