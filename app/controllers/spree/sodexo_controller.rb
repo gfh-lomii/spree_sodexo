@@ -46,7 +46,7 @@ module Spree
       order = JSON.parse request.body.read
       ecommerceOrderId = order['reference_id']
       multicajaOrderId = order['order_id']
-
+      Rails.logger.info "SODEXO#notify lomi_reference_id: #{ecommerceOrderId}, MC_order_id: #{multicajaOrderId}"
       payment = Spree::Payment.find_by(number: ecommerceOrderId)
       if payment.blank?
         Time.zone = 'America/Santiago'
@@ -86,6 +86,7 @@ module Spree
       order = JSON.parse request.body.read
       ecommerceOrderId = order['reference_id']
       multicajaOrderId = order['order_id']
+      Rails.logger.info "SODEXO#failure lomi_reference_id: #{ecommerceOrderId}, MC_order_id: #{multicajaOrderId}"
 
       # puts "ecommerceOrderId: #{ecommerceOrderId}"
       # puts "multicajaOrderId: #{multicajaOrderId}"
