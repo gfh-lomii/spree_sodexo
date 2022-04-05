@@ -47,7 +47,7 @@ module SpreeSodexo::Spree
         end
 
         t_amount = @order.total.to_i
-        t_tax = @order.total.round
+        t_tax = @order.total.to_i - (@order.total.to_i / 1.19).round
 
         if Rails.env.production?
           host = '3ffe929b6c8228a4d2a62804.getstatica.com'
