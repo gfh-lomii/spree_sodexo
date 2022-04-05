@@ -50,11 +50,11 @@ module SpreeSodexo::Spree
         t_tax = @order.total.round
 
         if Rails.env.production?
-          host = 'sodexo.' + request.host
+          host = '3ffe929b6c8228a4d2a62804.getstatica.com'
         else
           host = request.host
         end
-        
+
         req.body = {
                           'reference_id': payment_number,
                           'user': {
