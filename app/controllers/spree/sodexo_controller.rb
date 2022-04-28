@@ -73,9 +73,9 @@ module Spree
        raise "Error en autenticación"
       end
 
-      if !payment.completed?
-        ConfirmPaymentJob.perform_later(payment)
-      end
+      payment.complete! if !payment.completed?
+      ConfirmPaymentJob.perform_later(payment.id)
+
       head :ok
     rescue
       head :unprocessable_entity
